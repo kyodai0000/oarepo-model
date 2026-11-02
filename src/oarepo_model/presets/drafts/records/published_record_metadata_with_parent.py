@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, override
 from invenio_drafts_resources.records import (
     ParentRecordMixin,
 )
+from invenio_db import db
 from sqlalchemy.orm import declared_attr
 
 from oarepo_model.customizations import (
@@ -48,6 +49,16 @@ class RecordMetadataWithParentPreset(Preset):
             @declared_attr
             def __parent_record_model__(cls):  # declared attr is a class method
                 return dependencies["ParentRecordMetadata"]
+
+            @declared_attr
+            def __table_args__(cls):
+                return (
+                    db.Index(
+                        f"ix_{cls.__tablename__}_parent_id_index",
+                        "parent_id",
+                        "index",
+                    ),
+                )
 
         yield AddBaseClass("RecordMetadata", ParentRecordMixin)
         yield PrependMixin("RecordMetadata", ParentRecordModelMixin)

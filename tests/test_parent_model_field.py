@@ -17,3 +17,13 @@ def test_parent_model_field(
 
     assert draft_model.ParentRecordMetadata.query.one().model == "draft_test"
     assert draft_model_with_files.ParentRecordMetadata.query.one().model == "draft_with_files"
+
+
+def test_parent_record_metadata_parent_version_indexes(draft_model):
+    """Parent/version lookups have the composite index used by their queries."""
+    for metadata_model in (draft_model.RecordMetadata, draft_model.DraftMetadata):
+        assert any(
+            index.name == f"ix_{metadata_model.__tablename__}_parent_id_index"
+            and tuple(column.name for column in index.columns) == ("parent_id", "index")
+            for index in metadata_model.__table__.indexes
+        )

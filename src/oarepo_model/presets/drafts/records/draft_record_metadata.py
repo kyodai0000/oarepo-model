@@ -18,12 +18,14 @@ from invenio_drafts_resources.records import (
     DraftMetadataBase,
     ParentRecordMixin,
 )
+from sqlalchemy.orm import declared_attr
 
 from oarepo_model.customizations import (
     AddBaseClass,
     AddClass,
     AddClassField,
     Customization,
+    PrependMixin,
 )
 from oarepo_model.presets import Preset
 
@@ -47,6 +49,18 @@ class DraftMetadataPreset(Preset):
         model: InvenioModel,
         dependencies: dict[str, Any],
     ) -> Generator[Customization]:
+        class ParentRecordModelMixin:
+
+            @declared_attr
+            def __table_args__(cls):
+                return (
+                    db.Index(
+                        f"ix_{cls.__tablename__}_parent_id_index",
+                        "parent_id",
+                        "index",
+                    ),
+                )
+
         yield AddClass("DraftMetadata")
         yield AddClassField(
             "DraftMetadata",
@@ -61,3 +75,4 @@ class DraftMetadataPreset(Preset):
         yield AddBaseClass("DraftMetadata", db.Model)
         yield AddBaseClass("DraftMetadata", DraftMetadataBase)
         yield AddBaseClass("DraftMetadata", ParentRecordMixin)
+        yield PrependMixin("DraftMetadata", ParentRecordModelMixin)
